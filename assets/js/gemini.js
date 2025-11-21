@@ -3,6 +3,7 @@
 // It only calls your secure backend API.
 
 const API_BASE = "https://student-assistant-backend-dqzq.onrender.com";
+
 // When deployed, change to: "https://YOUR-BACKEND.onrender.com"
 
 export async function callGemini(prompt) {
