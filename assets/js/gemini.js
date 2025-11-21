@@ -1,13 +1,11 @@
 // frontend/assets/js/gemini.js
-// Frontend no longer contains any Gemini API key.
-// It only calls your secure backend API.
 
+// Secure backend URL
 const API_BASE = "https://student-assistant-backend-dqzq.onrender.com";
 
-// When deployed, change to: "https://YOUR-BACKEND.onrender.com"
-
+// Calls your backend → backend calls Gemini → returns AI answer
 export async function callGemini(prompt) {
-  const res = await fetch(`${API_BASE_URL}/api/ask`, {
+  const res = await fetch(`${API_BASE}/api/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),
