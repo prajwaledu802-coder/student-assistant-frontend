@@ -1,7 +1,7 @@
-// public/assets/js/app.js
+// assets/js/app.js
+
 import { callGemini } from "./gemini.js";
 import { auth, logMessage } from "./firebase.js";
-import { callGemini } from "./gemini.js";
 
 const chatMessages = document.getElementById("chatMessages");
 const chatInput = document.getElementById("chatInput");
@@ -32,9 +32,12 @@ function addMessage(text, type = "user") {
   wrapper.className = "chat " + (type === "user" ? "chat-end" : "chat-start");
 
   wrapper.innerHTML = `
-    <div class="chat-bubble ${type === "user" ? "chat-bubble-primary" : "chat-bubble-secondary"}
-      whitespace-pre-wrap text-xs sm:text-sm">
-      <span class="font-semibold">${type === "user" ? "You" : "Student Assistant AI"}:</span><br/>${text}
+    <div class="chat-bubble ${
+      type === "user" ? "chat-bubble-primary" : "chat-bubble-secondary"
+    } whitespace-pre-wrap text-xs sm:text-sm">
+      <span class="font-semibold">${
+        type === "user" ? "You" : "Student Assistant AI"
+      }:</span><br/>${text}
     </div>
   `;
 
@@ -61,7 +64,9 @@ function speakText(text) {
   if (!("speechSynthesis" in window)) return;
 
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ""));
+  const utterance = new SpeechSynthesisUtterance(
+    text.replace(/[*_#`]/g, "")
+  );
   utterance.rate = 1.02;
   utterance.pitch = 1.0;
 
@@ -160,7 +165,8 @@ ${content}
       summaryOutput.textContent = reply;
       addMessage("📘 I summarised your notes — check the output!", "ai");
       logMessage(currentUser, "ai", reply);
-    } catch {
+    } catch (err) {
+      console.error(err);
       summaryOutput.textContent = "❌ Failed to summarise notes.";
     }
   });
@@ -187,7 +193,8 @@ if (voiceMicBtn && voiceStatus) {
 
     recognition.onend = () => {
       isListening = false;
-      voiceStatus.textContent = "⛔ Listening stopped.";
+      voiceStatus.textContent =
+        "⛔ Listening stopped. You can edit the recognised text in the box.";
       voiceMicBtn.classList.remove("btn-active");
     };
 
@@ -196,12 +203,14 @@ if (voiceMicBtn && voiceStatus) {
       if (chatInput) chatInput.value = transcript;
     };
   } else {
-    voiceStatus.textContent = "❌ Voice input not supported. Use Google Chrome.";
+    voiceStatus.textContent =
+      "❌ Voice input not supported. Use Google Chrome.";
     voiceMicBtn.disabled = true;
   }
 
   voiceMicBtn.addEventListener("click", () => {
     if (!recognition) return;
-    isListening ? recognition.stop() : recognition.start();
+    if (isListening) recognition.stop();
+    else recognition.start();
   });
 }
