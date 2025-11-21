@@ -15,3 +15,5 @@ export async function callGemini(prompt) {
   const data = await res.json();
   return data.reply;
 }
+
+
