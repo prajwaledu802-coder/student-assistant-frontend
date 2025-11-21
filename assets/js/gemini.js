@@ -2,7 +2,7 @@
 // Frontend no longer contains any Gemini API key.
 // It only calls your secure backend API.
 
-const API_BASE_URL = "http://localhost:8000"; 
+const API_BASE = "https://student-assistant-backend-dqzq.onrender.com";
 // When deployed, change to: "https://YOUR-BACKEND.onrender.com"
 
 export async function callGemini(prompt) {
