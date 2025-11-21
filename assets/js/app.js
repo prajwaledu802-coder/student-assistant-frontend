@@ -1,5 +1,4 @@
-// assets/js/app.js
-
+// public/assets/js/app.js
 import { callGemini } from "./gemini.js";
 import { auth, logMessage } from "./firebase.js";
 
@@ -19,12 +18,10 @@ let currentUser = null;
 
 // Watch login/logout state
 if (auth) {
-  auth.onAuthStateChanged((u) => {
-    currentUser = u;
-  });
+  auth.onAuthStateChanged((u) => (currentUser = u));
 }
 
-// Add message bubbles to chat UI
+// Message bubbles
 function addMessage(text, type = "user") {
   if (!chatMessages) return;
 
@@ -49,7 +46,7 @@ function addMessage(text, type = "user") {
   }
 }
 
-// System messages (errors, etc.)
+// System message
 function addSystemMessage(text) {
   if (!chatMessages) return;
   const el = document.createElement("div");
@@ -59,28 +56,23 @@ function addSystemMessage(text) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Voice output (Text-to-Speech)
+// Voice output
 function speakText(text) {
   if (!("speechSynthesis" in window)) return;
-
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(
-    text.replace(/[*_#`]/g, "")
-  );
+  const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ""));
   utterance.rate = 1.02;
   utterance.pitch = 1.0;
-
   window.speechSynthesis.speak(utterance);
 }
 
-// Send message to AI
+// Handle SEND
 async function handleSend() {
   if (!chatInput || !sendBtn) return;
-
   const text = chatInput.value.trim();
   if (!text) return;
-  chatInput.value = "";
 
+  chatInput.value = "";
   addMessage(text, "user");
   logMessage(currentUser, "user", text);
 
@@ -89,19 +81,16 @@ async function handleSend() {
 
   const prompt = `
 You are Student Assistant AI, a college exam helper.
-Give clear, structured answers with headings, bullet points, definitions, formulas, and examples.
-Help the user understand concepts easily.
+Give clear, structured answers with headings, bullet points, formulas, examples.
 
 User: ${text}
-  `;
+`;
 
   try {
     const reply = await callGemini(prompt);
-
     addMessage(reply, "ai");
     logMessage(currentUser, "ai", reply);
 
-    // Auto-fill outputs
     if (/plan|schedule|timetable|time table/i.test(text)) {
       if (planOutput) planOutput.textContent = reply;
     } else if (summaryOutput) {
@@ -116,10 +105,9 @@ User: ${text}
   }
 }
 
-// Send button + Enter key support
+// Chat send
 if (sendBtn && chatInput) {
   sendBtn.addEventListener("click", handleSend);
-
   chatInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -128,58 +116,49 @@ if (sendBtn && chatInput) {
   });
 }
 
-// Quick template buttons
+// Quick templates
 quickButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    if (!chatInput) return;
     chatInput.value = btn.dataset.template + "\n\n";
     chatInput.focus();
   });
 });
 
-// Summarise TXT files
+// File summary
 if (summariseFileBtn && fileInput && summaryOutput) {
   summariseFileBtn.addEventListener("click", async () => {
     const file = fileInput.files?.[0];
 
-    if (!file) {
-      summaryOutput.textContent = "📄 Please select a .txt file first.";
-      return;
-    }
+    if (!file) return (summaryOutput.textContent = "📄 Select a .txt file first.");
 
-    if (!file.name.endsWith(".txt")) {
-      summaryOutput.textContent = "⚠️ Only .txt files supported.";
-      return;
-    }
+    if (!file.name.endsWith(".txt"))
+      return (summaryOutput.textContent = "⚠️ Only .txt files supported.");
 
     const content = await file.text();
-    summaryOutput.textContent = "⏳ Summarising your notes…";
+    summaryOutput.textContent = "⏳ Summarising…";
 
     try {
       const reply = await callGemini(`
-Summarise the following notes into clear bullet points, definitions, formulas, and key points.
+Summarise the following notes into bullet points, definitions, formulas:
 
 ${content}
-      `);
-
+`);
       summaryOutput.textContent = reply;
-      addMessage("📘 I summarised your notes — check the output!", "ai");
+      addMessage("📘 Notes summarised!", "ai");
       logMessage(currentUser, "ai", reply);
-    } catch (err) {
-      console.error(err);
+    } catch {
       summaryOutput.textContent = "❌ Failed to summarise notes.";
     }
   });
 }
 
-// Voice input (Speech-to-Text)
+// Voice input
 let recognition = null;
 let isListening = false;
 
 if (voiceMicBtn && voiceStatus) {
   if ("webkitSpeechRecognition" in window) {
     const SR = window.webkitSpeechRecognition;
-
     recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -187,30 +166,27 @@ if (voiceMicBtn && voiceStatus) {
 
     recognition.onstart = () => {
       isListening = true;
-      voiceStatus.textContent = "🎤 Listening… Ask your question.";
+      voiceStatus.textContent = "🎤 Listening…";
       voiceMicBtn.classList.add("btn-active");
     };
 
     recognition.onend = () => {
       isListening = false;
-      voiceStatus.textContent =
-        "⛔ Listening stopped. You can edit the recognised text in the box.";
+      voiceStatus.textContent = "⛔ Stopped.";
       voiceMicBtn.classList.remove("btn-active");
     };
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      if (chatInput) chatInput.value = transcript;
+      chatInput.value = transcript;
     };
   } else {
-    voiceStatus.textContent =
-      "❌ Voice input not supported. Use Google Chrome.";
+    voiceStatus.textContent = "❌ Use Chrome for voice input.";
     voiceMicBtn.disabled = true;
   }
 
   voiceMicBtn.addEventListener("click", () => {
     if (!recognition) return;
-    if (isListening) recognition.stop();
-    else recognition.start();
+    isListening ? recognition.stop() : recognition.start();
   });
 }
