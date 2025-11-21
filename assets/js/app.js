@@ -1,4 +1,5 @@
 // public/assets/js/app.js
+import { callGemini } from "./gemini.js";
 import { auth, logMessage } from "./firebase.js";
 import { callGemini } from "./gemini.js";
 
